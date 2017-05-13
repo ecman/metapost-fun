@@ -19,66 +19,78 @@ function main() {
   });
 }
 
-function getFilePart(boundary, filePath, name) {
+function getFilePart(filePath, name) {
   return new Promise((res, rej) => {
     fs.readFile(filePath, 'utf8', (err, data) => {
       if (err) rej(err);
       let filename = path.basename(filePath);
       let extname = path.extname(filename).substr(1);
-      res([boundary,
+      res([
         `Content-Disposition: form-data; name="${name}"; filename="${filename}"`,
         `Content-Type: text/${extname}`,
-        ``,
-        data
+        '',
+        data,
+        ''
       ].join("\r\n"));
     });
   });
 }
 
-function getFieldPart(boundary, value, name) {
+function getFieldPart(value, name) {
   return new Promise((res, rej) => { 
-    res([boundary,
+    res([
       `Content-Disposition: form-data; name="${name}"`,
-      ``,
-      value
+      '',
+      value,
+      '' 
     ].join("\r\n"));
   });
 }
 
-function postData(metaPath) { 
-  fs.readFile(metaPath, 'utf8', (err, data) => {
-    let boundary = "---ABC";
-    let lines = data.split("\n").map((value) => value.trim());
-    Promise.all(KEYS.slice(0)
-      .map((keyName, index) => {
-        switch (keyName) {
-          case 'FILE': {
-            let filename = lines[index];
-            let filePath = path.join(path.dirname(metaPath), filename);
-            return getFilePart(boundary, filePath, keyName);
-          }
-          default: {
-            let value = lines[index];
-            return getFieldPart(boundary, value, keyName);
-          }
+function getAllParts(metaPath, data) {
+  let lines = data.split("\n").map((value) => value.trim());
+  return Promise.all(KEYS
+    .slice(0)
+    .map((keyName, index) => {
+      switch (keyName) {
+        case 'FILE': {
+          let filename = lines[index];
+          let filePath = path.join(path.dirname(metaPath), filename);
+          return getFilePart(filePath, keyName);
         }
-      })
-    )
-    .then((parts) => { 
-      let opts = {
-        hostname: 'localhost',
-        port: 3000,
-        method: 'POST',
-        path: '/',
-        headers: { 'Content-Type': 'multipart/form-data' }
-      };
-      let req = http.request(opts, (res) => {
-        console.log(`Post to: ${metaPath} -- Status: ${res.statusCode}`);
-        res.on('error', (err) => console.log(`Error with ${metaPath}: ${err.message}`));
-      });
-      req.end(parts.join("\r\n"));
-    });
-  });
+        default: {
+          let value = lines[index];
+          return getFieldPart(value, keyName);
+        }
+      }
+    }));
+}
+
+function getPostReqCfg(host, port, boundary, body) {
+  return {
+    hostname: 'localhost',
+    port: 3000,
+    method: 'POST',
+    path: '/',
+    headers: { 
+      'Content-Type': `multipart/form-data; boundary=${boundary}` ,
+      'Content-Length': body.length
+    }
+  };
+}
+
+function postData(metaPath) { 
+  let boundary = "-".repeat(25) + new String(Math.random() * 123456789).replace(/\./, '');
+  fs.readFile(metaPath, 'utf8', (err, data) => 
+    getAllParts(metaPath, data)
+      .then((parts) => { 
+        let body = ['', ...parts, ''].join(boundary + "\r\n");
+        let reqCfg = getPostReqCfg('localhost', 3000, boundary, body);
+        http.request(reqCfg, (res) => {
+          console.log(`Post meta: ${metaPath} -- Status: ${res.statusCode}`);
+          res.on('error', (err) => console.log(`Error with ${metaPath}: ${err.message}`));
+        }).end(body);
+     }));
 }
 
 function walkPath(dirPath, handler) {
