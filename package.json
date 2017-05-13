@@ -12,6 +12,6 @@
   "author": "ecman <its.ec@outlook.com>",
   "license": "MIT",
   "engines": {
-    "node": ">=3.3.1"
+    "node": ">=6.4.0"
   }
 }
