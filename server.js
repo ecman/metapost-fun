@@ -2,7 +2,7 @@ const http = require('http');
 const DEBUG = false;
 const server = http.createServer((req, res) => {
   initExitTimer();
-  let body;
+  let body = '';
   req.setEncoding('utf8');
   req.on('data', (data) => body += data);
   req.on('end', () => {
