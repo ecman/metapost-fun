@@ -84,7 +84,9 @@ function postData(metaPath) {
   fs.readFile(metaPath, 'utf8', (err, data) => 
     getAllParts(metaPath, data)
       .then((parts) => { 
-        let body = ['', ...parts, ''].join(boundary + "\r\n");
+        let body = ['', ...parts, '']
+          .join(boundary + "\r\n")
+          .replace(/\r\n$/, "--\r\n");
         let reqCfg = getPostReqCfg('localhost', 3000, boundary, body);
         http.request(reqCfg, (res) => {
           console.log(`Post meta: ${metaPath} -- Status: ${res.statusCode}`);
