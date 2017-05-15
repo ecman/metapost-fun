@@ -29,8 +29,7 @@ function getFilePart(filePath, name) {
         `Content-Disposition: form-data; name="${name}"; filename="${filename}"`,
         `Content-Type: text/${extname}`,
         '',
-        data,
-        ''
+        data
       ].join("\r\n"));
     });
   });
@@ -41,8 +40,7 @@ function getFieldPart(value, name) {
     res([
       `Content-Disposition: form-data; name="${name}"`,
       '',
-      value,
-      '' 
+      value
     ].join("\r\n"));
   });
 }
@@ -80,13 +78,15 @@ function getPostReqCfg(host, port, boundary, body) {
 }
 
 function postData(metaPath) { 
-  let boundary = "-".repeat(25) + new String(Math.random() * 123456789).replace(/\./, '');
+  let boundary = 'Metapost' + new String(Math.random() * 123456789).replace(/\./, '');
   fs.readFile(metaPath, 'utf8', (err, data) => 
     getAllParts(metaPath, data)
       .then((parts) => { 
-        let body = ['', ...parts, '']
-          .join(boundary + "\r\n")
-          .replace(/\r\n$/, "--\r\n");
+        let body = [
+          `--${boundary}\r\n`,
+          parts.join(`\r\n--${boundary}\r\n`),
+          `\r\n--${boundary}--`
+        ].join('');
         let reqCfg = getPostReqCfg('localhost', 3000, boundary, body);
         http.request(reqCfg, (res) => {
           console.log(`Post meta: ${metaPath} -- Status: ${res.statusCode}`);
