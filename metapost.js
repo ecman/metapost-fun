@@ -8,7 +8,9 @@ const DATA_PATH = path.join('.', 'data');
 const KEY_PATH = path.join(DATA_PATH, 'keys.txt'); 
 const VALUES_PATH = path.join(DATA_PATH, 'values');
 vm.runInThisContext(fs.readFileSync(KEY_PATH, 'utf8'));
-const FILE_INDEX = KEYS.indexOf('FILE');
+const POST_HOSTNAME = 'localhost';
+const POST_PORT = 3000;
+const POST_PATHNAME = '/';
 
 main();
 
@@ -64,15 +66,14 @@ function getAllParts(metaPath, data) {
     }));
 }
 
-function getPostReqCfg(host, port, boundary, body) {
+function getPostReqCfg(postHostname, postPort, postPathname, boundary) {
   return {
-    hostname: 'localhost',
-    port: 3000,
+    hostname: postHostname,
+    port: postPort,
     method: 'POST',
-    path: '/',
+    path: postPathname,
     headers: { 
-      'Content-Type': `multipart/form-data; boundary=${boundary}` ,
-      'Content-Length': body.length
+      'Content-Type': `multipart/form-data; boundary=${boundary}`
     }
   };
 }
@@ -87,7 +88,7 @@ function postData(metaPath) {
           parts.join(`\r\n--${boundary}\r\n`),
           `\r\n--${boundary}--`
         ].join('');
-        let reqCfg = getPostReqCfg('localhost', 3000, boundary, body);
+        let reqCfg = getPostReqCfg(POST_HOSTNAME, POST_PORT, POST_PATHNAME, boundary);
         http.request(reqCfg, (res) => {
           console.log(`Post meta: ${metaPath} -- Status: ${res.statusCode}`);
           res.on('error', (err) => console.log(`Error with ${metaPath}: ${err.message}`));
