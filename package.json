@@ -1,17 +1,23 @@
 {
   "name": "metapost-fun",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A script to post meta data",
   "main": "index.js",
   "scripts": {
     "test": "node server.js & node metapost.js",
     "start": "node ."
   },
-  "keywords": ["not-for-production", "toy"],
+  "keywords": [
+    "not-for-production",
+    "toy"
+  ],
   "private": true,
   "author": "ecman <its.ec@outlook.com>",
   "license": "MIT",
   "engines": {
     "node": ">=6.4.0"
+  },
+  "dependencies": {
+    "walkitout": "^1.1.2"
   }
 }

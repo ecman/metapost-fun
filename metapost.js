@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 const http = require('http');
+const walkitout = require('walkitout');
 
 const DATA_PATH = path.join('.', 'data');
 const KEY_PATH = path.join(DATA_PATH, 'keys.txt'); 
@@ -15,10 +16,11 @@ const POST_PATHNAME = '/';
 main();
 
 function main() {
-  walkPath(VALUES_PATH, (filePath) => {
-      if (!/\.meta$/.test(filePath)) return;
-      postData(filePath);
-  });
+  walkitout(VALUES_PATH, (err, filePath, done) => {
+      if (err) return done();
+      if (!/\.meta$/.test(filePath)) return done();
+      postData(filePath, done);
+  }, () => console.log('Meta posted!'));
 }
 
 function getFilePart(filePath, name) {
@@ -78,7 +80,7 @@ function getPostReqCfg(postHostname, postPort, postPathname, boundary) {
   };
 }
 
-function postData(metaPath) { 
+function postData(metaPath, done) { 
   let boundary = 'Metapost' + new String(Math.random() * 123456789).replace(/\./, '');
   fs.readFile(metaPath, 'utf8', (err, data) => 
     getAllParts(metaPath, data)
@@ -92,28 +94,7 @@ function postData(metaPath) {
         http.request(reqCfg, (res) => {
           console.log(`Post meta: ${metaPath} -- Status: ${res.statusCode}`);
           res.on('error', (err) => console.log(`Error with ${metaPath}: ${err.message}`));
+          done();
         }).end(body);
      }));
-}
-
-function walkPath(dirPath, handler) {
-  fs.readdir(dirPath, (err, filenames) => {
-    if (err) throw err;
-    filenames
-      .filter((filename) => filename[0] !== '.')
-      .map((filename) => path.join(dirPath, filename))
-      .forEach((filePath) => handlePath(filePath, handler));
-  });
-}
-
-function handlePath(filePath, handler) {
-  fs.stat(filePath, (err, stat) => {
-    if (err) throw err;
-    if (stat.isDirectory()) {
-      walkPath(filePath, handler);
-    } 
-    else if (stat.isFile()) {
-      setTimeout(() => handler(filePath), 0);
-    }
-  });
 }
