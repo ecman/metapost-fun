@@ -1,6 +1,8 @@
 # metapost
 
-A script to post meta data
+Post meta data in a directory tree to an endpoint
+
+This is a SAMPLE.
 
 # Usage
 
