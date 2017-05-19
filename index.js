@@ -1,2 +1,2 @@
 require('./server');
-require('./metapost');
+require('./metapost-stream');
